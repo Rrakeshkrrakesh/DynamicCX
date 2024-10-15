@@ -1,7 +1,14 @@
 import streamlit as st
 import pandas as pd
 
-# Define the configuration matrix
+# Load the Excel file
+file_path = 'path_to_your_file/CX_Dynamic_Layouts_Config.xlsx'
+xls = pd.ExcelFile(file_path)
+
+# Load the 'Resi_Electric_AMI' sheet (or any other relevant sheet)
+resi_electric_ami_df = pd.read_excel(xls, sheet_name='Resi_Electric_AMI')
+
+# Define the configuration matrix (you can modify this to dynamically load from the sheet)
 matrix = {
     'Energy Flow': {'Default': 'pass', 'Solar $': 'include', 'Solar kWh': 'include', 'EV': 'pass', 'AMI': 'pass'},
     'Cumulative Balance': {'Default': 'pass', 'Budget Billing $': 'include', 'Budget Billing kWh': 'include'},
@@ -9,6 +16,7 @@ matrix = {
     'Solar Production': {'Default': 'pass', 'Solar $': 'include', 'Solar kWh': 'include'}
 }
 
+# Define dimensions
 dimensions = ['TOU Rate', 'Solar $', 'Solar kWh', 'EV', 'Budget Billing $', 'Budget Billing kWh', 'AMI']
 elements = list(matrix.keys())
 
@@ -49,6 +57,17 @@ else:
     explanation = "Please select dimensions from the sidebar to see how they affect the configuration."
 
 st.info(explanation)
+
+# Process the data from the 'Resi_Electric_AMI' sheet (or any other selected sheet)
+# This is an example of how to load and process relevant data from the sheet dynamically
+# Let's assume the sheet contains columns 'Element', 'Dimension', and 'Status' for now
+for index, row in resi_electric_ami_df.iterrows():
+    element = row['Element']
+    dimension = row['Dimension']
+    status = row['Status']  # Could be 'include', 'kill', or 'pass'
+    
+    if element in matrix:
+        matrix[element][dimension] = status
 
 # Generate table data based on the user-selected dimensions
 table_data = []
@@ -91,21 +110,6 @@ st.markdown("""
 4. 'Kill' overrides both 'include' and 'pass'.
 5. The final status is determined by evaluating all selected dimensions.
 """)
-
-# Display dimension descriptions
-st.markdown("### Dimension Descriptions")
-description_map = {
-    'TOU Rate': 'Time-of-use rates impact energy pricing.',
-    'Solar $': 'The presence of solar panels affects financial calculations.',
-    'Solar kWh': 'The amount of solar energy produced impacts usage patterns.',
-    'EV': 'Electric vehicle charging impacts energy consumption.',
-    'Budget Billing $': 'Budget billing influences payment schedules.',
-    'Budget Billing kWh': 'Budget billing affects usage targets.',
-    'AMI': 'Advanced metering infrastructure provides detailed energy usage data.'
-}
-
-for dim in dimensions:
-    st.markdown(f"- **{dim}:** {description_map.get(dim, 'Description not available.')}")
 
 # Option to display raw matrix data
 with st.expander("Show raw matrix data"):
