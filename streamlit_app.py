@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Load the Excel file
-file_path = 'Copy of CX Dynamic Layouts Config.xlsx'  # Replace with your actual file path
+file_path = 'Copy of CX Dynamic Layouts Config.xlsx' 
 xls = pd.ExcelFile(file_path)
 
 # Load all sheets
