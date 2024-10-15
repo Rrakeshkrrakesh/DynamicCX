@@ -5,112 +5,85 @@ import pandas as pd
 file_path = 'CX_Dynamic_Layouts_Config.xlsx'
 xls = pd.ExcelFile(file_path)
 
-# Load the 'Resi_Electric_AMI' sheet (or any other relevant sheet)
-resi_electric_ami_df = pd.read_excel(xls, sheet_name='Resi_Electric_AMI')
+# Load all sheets
+sheet_names = xls.sheet_names
+data = {sheet: pd.read_excel(xls, sheet_name=sheet) for sheet in sheet_names}
 
-# Define the configuration matrix (you can modify this to dynamically load from the sheet)
-matrix = {
-    'Energy Flow': {'Default': 'pass', 'Solar $': 'include', 'Solar kWh': 'include', 'EV': 'pass', 'AMI': 'pass'},
-    'Cumulative Balance': {'Default': 'pass', 'Budget Billing $': 'include', 'Budget Billing kWh': 'include'},
-    'TOU Usage & Cost': {'Default': 'pass', 'TOU Rate': 'include', 'Solar $': 'kill', 'Solar kWh': 'kill'},
-    'Solar Production': {'Default': 'pass', 'Solar $': 'include', 'Solar kWh': 'include'}
-}
+# Define user attributes and their order of precedence
+user_attributes = ['EV', 'TOU', 'Solar', 'Budget Billing', 'Demand Charge', 'Regular']
 
-# Define dimensions
-dimensions = ['TOU Rate', 'Solar $', 'Solar kWh', 'EV', 'Budget Billing $', 'Budget Billing kWh', 'AMI']
-elements = list(matrix.keys())
+# Streamlit app
+st.set_page_config(page_title="CX Dynamic Layout Configuration", layout="wide")
+st.title("CX Dynamic Layout Configuration")
 
-# Page layout configuration for Streamlit
-st.set_page_config(page_title="CX Configuration Matrix", layout="wide")
+# Sidebar for user input
+st.sidebar.header("Configure User")
+selected_sheet = st.sidebar.selectbox("Select User Type, Fuel & Meter Type", sheet_names)
+selected_attributes = st.sidebar.multiselect("Select User Attributes", user_attributes)
 
-# Title and description
-st.title("Dynamic CX Configuration Matrix")
-st.markdown("""
-This tool allows you to visualize how different **user dimensions** influence the inclusion or exclusion of various **elements** 
-in the configuration. Based on the selected dimensions, the app dynamically updates the matrix.
-""")
-
-# Sidebar for dimension selection
-st.sidebar.header("Configure User Dimensions")
-dimension_color_map = {
-    'TOU Rate': 'blue',
-    'Solar $': 'green',
-    'Solar kWh': 'green',
-    'EV': 'purple',
-    'Budget Billing $': 'orange',
-    'Budget Billing kWh': 'orange',
-    'AMI': 'red'
-}
-
-# Using styled dimension names with colors in the sidebar
-selected_dimensions = st.sidebar.multiselect(
-    "Choose dimensions:",
-    dimensions,
-    format_func=lambda dim: f'{dim} ({dimension_color_map.get(dim, "black")})'
-)
-
-# Display explanation based on user selection
-if selected_dimensions:
-    explanation = f"Based on the selected dimensions: {', '.join(selected_dimensions)}, "
-    explanation += "the system determines whether to include or exclude each element. 'Include' overrides 'Pass', and 'Kill' overrides both."
-else:
-    explanation = "Please select dimensions from the sidebar to see how they affect the configuration."
-
-st.info(explanation)
-
-# Process the data from the 'Resi_Electric_AMI' sheet (or any other selected sheet)
-# This is an example of how to load and process relevant data from the sheet dynamically
-# Let's assume the sheet contains columns 'Element', 'Dimension', and 'Status' for now
-for index, row in resi_electric_ami_df.iterrows():
-    element = row['Element']
-    dimension = row['Dimension']
-    status = row['Status']  # Could be 'include', 'kill', or 'pass'
-    
-    if element in matrix:
-        matrix[element][dimension] = status
-
-# Generate table data based on the user-selected dimensions
-table_data = []
-for element in elements:
-    status = 'pass'
-    reason = 'Default pass'
-    for dim in selected_dimensions:
-        if dim in matrix[element]:
-            if matrix[element][dim] == 'kill':
-                status = 'kill'
-                reason = f"{dim} dimension kills this element"
+# Function to get applicable widgets
+def get_applicable_widgets(df, attributes):
+    applicable_widgets = []
+    for _, row in df.iterrows():
+        widget = row['Widget Name']
+        is_applicable = False
+        for attr in attributes:
+            if attr in df.columns and pd.notna(row[attr]) and row[attr] != 0:
+                is_applicable = True
                 break
-            elif matrix[element][dim] == 'include':
-                status = 'include'
-                reason = f"{dim} dimension includes this element"
+        if is_applicable and row['Status'] != 'OFF':
+            applicable_widgets.append(widget)
+    return applicable_widgets
+
+# Function to get widget order
+def get_widget_order(df, attributes, applicable_widgets):
+    widget_order = []
+    for attr in attributes:
+        if attr in df.columns:
+            attr_widgets = df[df['Widget Name'].isin(applicable_widgets)].sort_values(attr)
+            for widget in attr_widgets['Widget Name']:
+                if widget not in widget_order and pd.notna(df.loc[df['Widget Name'] == widget, attr].iloc[0]):
+                    widget_order.append(widget)
     
-    table_data.append({
-        'Element': element,
-        'Status': 'Included' if status == 'include' else 'Not Included',
-        'Reason': reason
-    })
+    # Add any remaining widgets
+    for widget in applicable_widgets:
+        if widget not in widget_order:
+            widget_order.append(widget)
+    
+    return widget_order
 
-# Display the results in a formatted table
-df = pd.DataFrame(table_data)
+# Main app logic
+if selected_sheet in data:
+    df = data[selected_sheet]
+    
+    # Get applicable widgets
+    applicable_widgets = get_applicable_widgets(df, selected_attributes)
+    
+    # Get widget order
+    widget_order = get_widget_order(df, selected_attributes, applicable_widgets)
+    
+    # Display results
+    st.subheader(f"Widget Order for {selected_sheet}")
+    for section in df['Section'].unique():
+        st.write(f"**{section} Section:**")
+        section_widgets = [w for w in widget_order if w in df[df['Section'] == section]['Widget Name'].values]
+        for i, widget in enumerate(section_widgets):
+            st.write(f"{i+1}. {widget}")
+        st.write("")
+    
+    # Display raw data
+    with st.expander("Show raw data"):
+        st.dataframe(df)
 
-st.subheader("Configuration Matrix Result")
-st.dataframe(
-    df.style.apply(
-        lambda x: ['background-color: lightgreen' if x.Status == 'Included' else 'background-color: lightcoral' for i in x], axis=1
-    ),
-    height=300
-)
+else:
+    st.error("Selected sheet not found in the Excel file.")
 
-# How it works section
+# Explanation of the logic
 st.markdown("""
-### How it Works:
-1. Each element has a default 'pass' status.
-2. Dimensions can either 'include' or 'kill' an element.
-3. 'Include' overrides the 'pass' status.
-4. 'Kill' overrides both 'include' and 'pass'.
-5. The final status is determined by evaluating all selected dimensions.
+### How it works:
+1. User selects the sheet (User Type, Fuel & Meter Type) and user attributes.
+2. The system identifies applicable widgets based on the selected attributes and whether they're turned on.
+3. Widgets are ordered based on the precedence of user attributes (EV > TOU > Solar > Budget Billing > Demand Charge).
+4. Widgets are grouped by sections, maintaining their relative order within each section.
+5. The final order of widgets is displayed for each section.
 """)
-
-# Option to display raw matrix data
-with st.expander("Show raw matrix data"):
-    st.json(matrix)
