@@ -21,31 +21,40 @@ st.sidebar.header("Configure User")
 selected_sheet = st.sidebar.selectbox("Select User Type, Fuel & Meter Type", sheet_names)
 selected_attributes = st.sidebar.multiselect("Select User Attributes", user_attributes)
 
+# Function to get column names
+def get_column_names(df):
+    widget_column = None
+    status_column = None
+    section_column = None
+
+    for col in df.columns:
+        if 'widget' in col.lower() or 'name' in col.lower():
+            widget_column = col
+        elif 'status' in col.lower() or 'flag' in col.lower():
+            status_column = col
+        elif 'section' in col.lower():
+            section_column = col
+    
+    return widget_column, status_column, section_column
+
 # Function to get applicable widgets
-def get_applicable_widgets(df, attributes):
+def get_applicable_widgets(df, attributes, widget_column, status_column):
     applicable_widgets = []
-    widget_column = 'Name of the widget or page within each section'
-    status_column = 'Flag to signify whether the widget is "New or Existing"'
     
     for _, row in df.iterrows():
-        if widget_column not in row or status_column not in row:
-            st.error(f"Required columns not found in the sheet. Expected '{widget_column}' and '{status_column}'")
-            return []
-        
         widget = row[widget_column]
         is_applicable = False
         for attr in attributes:
             if attr in df.columns and pd.notna(row[attr]) and row[attr] != 0:
                 is_applicable = True
                 break
-        if is_applicable and row[status_column] != 'OFF':
+        if is_applicable and (status_column is None or row[status_column] != 'OFF'):
             applicable_widgets.append(widget)
     return applicable_widgets
 
 # Function to get widget order
-def get_widget_order(df, attributes, applicable_widgets):
+def get_widget_order(df, attributes, applicable_widgets, widget_column):
     widget_order = []
-    widget_column = 'Name of the widget or page within each section'
     
     for attr in attributes:
         if attr in df.columns:
@@ -65,31 +74,56 @@ def get_widget_order(df, attributes, applicable_widgets):
 if selected_sheet in data:
     df = data[selected_sheet]
     
+    # Display column names
+    st.subheader("Column Names in the Sheet")
+    st.write(df.columns.tolist())
+    
     # Display raw data
-    with st.expander("Show raw data"):
-        st.dataframe(df)
+    with st.expander("Show raw data (first 5 rows)"):
+        st.dataframe(df.head())
+    
+    # Get column names
+    widget_column, status_column, section_column = get_column_names(df)
+    
+    if widget_column:
+        st.success(f"Widget column found: '{widget_column}'")
+    else:
+        st.error("Widget column not found. Please check the column names.")
+    
+    if status_column:
+        st.success(f"Status column found: '{status_column}'")
+    else:
+        st.warning("Status column not found. The app will proceed without checking widget status.")
+    
+    if section_column:
+        st.success(f"Section column found: '{section_column}'")
+    else:
+        st.warning("Section column not found. Widgets will not be grouped by section.")
     
     # Get applicable widgets
-    applicable_widgets = get_applicable_widgets(df, selected_attributes)
-    
-    if applicable_widgets:
-        # Get widget order
-        widget_order = get_widget_order(df, selected_attributes, applicable_widgets)
+    if widget_column:
+        applicable_widgets = get_applicable_widgets(df, selected_attributes, widget_column, status_column)
         
-        # Display results
-        st.subheader(f"Widget Order for {selected_sheet}")
-        section_column = 'Section name is assigned to a group of similar widgets'
-        if section_column in df.columns:
-            for section in df[section_column].unique():
-                st.write(f"**{section} Section:**")
-                section_widgets = [w for w in widget_order if w in df[df[section_column] == section]['Name of the widget or page within each section'].values]
-                for i, widget in enumerate(section_widgets):
+        if applicable_widgets:
+            # Get widget order
+            widget_order = get_widget_order(df, selected_attributes, applicable_widgets, widget_column)
+            
+            # Display results
+            st.subheader(f"Widget Order for {selected_sheet}")
+            if section_column:
+                for section in df[section_column].unique():
+                    st.write(f"**{section} Section:**")
+                    section_widgets = [w for w in widget_order if w in df[df[section_column] == section][widget_column].values]
+                    for i, widget in enumerate(section_widgets):
+                        st.write(f"{i+1}. {widget}")
+                    st.write("")
+            else:
+                for i, widget in enumerate(widget_order):
                     st.write(f"{i+1}. {widget}")
-                st.write("")
         else:
-            st.error(f"Section column '{section_column}' not found in the sheet.")
+            st.warning("No applicable widgets found for the selected attributes.")
     else:
-        st.warning("No applicable widgets found for the selected attributes.")
+        st.error("Cannot process widgets without a valid widget column.")
 
 else:
     st.error("Selected sheet not found in the Excel file.")
@@ -98,8 +132,9 @@ else:
 st.markdown("""
 ### How it works:
 1. User selects the sheet (User Type, Fuel & Meter Type) and user attributes.
-2. The system identifies applicable widgets based on the selected attributes and whether they're turned on.
-3. Widgets are ordered based on the precedence of user attributes (EV > TOU > Solar > Budget Billing > Demand Charge).
-4. Widgets are grouped by sections, maintaining their relative order within each section.
-5. The final order of widgets is displayed for each section.
+2. The system attempts to identify the correct columns for widgets, status, and sections.
+3. Applicable widgets are determined based on the selected attributes and status (if available).
+4. Widgets are ordered based on the precedence of user attributes.
+5. If a section column is found, widgets are grouped by sections, maintaining their relative order within each section.
+6. The final order of widgets is displayed, either by section or as a single list.
 """)
