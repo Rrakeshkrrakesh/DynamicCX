@@ -2,139 +2,108 @@ import streamlit as st
 import pandas as pd
 
 # Load the Excel file
+@st.cache_data
+def load_excel(file_path):
+    return pd.ExcelFile(file_path)
+
 file_path = 'CX_Dynamic_Layouts_Config.xlsx'
-xls = pd.ExcelFile(file_path)
-
-# Load all sheets
-sheet_names = xls.sheet_names
-data = {sheet: pd.read_excel(xls, sheet_name=sheet) for sheet in sheet_names}
-
-# Define user attributes and their order of precedence
-user_attributes = ['EV', 'TOU', 'Solar', 'Budget Billing', 'Demand Charge', 'Regular']
+xls = load_excel(file_path)
 
 # Streamlit app
 st.set_page_config(page_title="CX Dynamic Layout Configuration", layout="wide")
 st.title("CX Dynamic Layout Configuration")
 
-# Sidebar for user input
-st.sidebar.header("Configure User")
-selected_sheet = st.sidebar.selectbox("Select User Type, Fuel & Meter Type", sheet_names)
-selected_attributes = st.sidebar.multiselect("Select User Attributes", user_attributes)
+# Sheet selection
+sheet_names = xls.sheet_names
+selected_sheet = st.selectbox("Select Sheet", sheet_names)
 
-# Function to get column names
-def get_column_names(df):
-    widget_column = None
-    status_column = None
-    section_column = None
+# Load selected sheet
+@st.cache_data
+def load_sheet_data(xls, sheet_name):
+    return pd.read_excel(xls, sheet_name=sheet_name)
 
-    for col in df.columns:
-        if 'widget' in col.lower() or 'name' in col.lower():
-            widget_column = col
-        elif 'status' in col.lower() or 'flag' in col.lower():
-            status_column = col
-        elif 'section' in col.lower():
-            section_column = col
-    
-    return widget_column, status_column, section_column
+df = load_sheet_data(xls, selected_sheet)
 
-# Function to get applicable widgets
-def get_applicable_widgets(df, attributes, widget_column, status_column):
-    applicable_widgets = []
-    
-    for _, row in df.iterrows():
-        widget = row[widget_column]
-        is_applicable = False
-        for attr in attributes:
-            if attr in df.columns and pd.notna(row[attr]) and row[attr] != 0:
-                is_applicable = True
-                break
-        if is_applicable and (status_column is None or row[status_column] != 'OFF'):
-            applicable_widgets.append(widget)
-    return applicable_widgets
+# Display sheet info
+st.subheader("Sheet Information")
+st.write(f"Number of rows: {df.shape[0]}")
+st.write(f"Number of columns: {df.shape[1]}")
 
-# Function to get widget order
-def get_widget_order(df, attributes, applicable_widgets, widget_column):
-    widget_order = []
-    
-    for attr in attributes:
-        if attr in df.columns:
-            attr_widgets = df[df[widget_column].isin(applicable_widgets)].sort_values(attr)
-            for widget in attr_widgets[widget_column]:
-                if widget not in widget_order and pd.notna(df.loc[df[widget_column] == widget, attr].iloc[0]):
-                    widget_order.append(widget)
-    
-    # Add any remaining widgets
-    for widget in applicable_widgets:
-        if widget not in widget_order:
-            widget_order.append(widget)
-    
-    return widget_order
+# Display column names and types
+st.subheader("Column Names and Types")
+col_info = pd.DataFrame({
+    "Column Name": df.columns,
+    "Data Type": df.dtypes,
+    "Non-Null Count": df.notna().sum(),
+    "Unique Values": [df[col].nunique() for col in df.columns]
+})
+st.dataframe(col_info)
 
-# Main app logic
-if selected_sheet in data:
-    df = data[selected_sheet]
-    
-    # Display column names
-    st.subheader("Column Names in the Sheet")
-    st.write(df.columns.tolist())
-    
-    # Display raw data
-    with st.expander("Show raw data (first 5 rows)"):
-        st.dataframe(df.head())
-    
-    # Get column names
-    widget_column, status_column, section_column = get_column_names(df)
-    
-    if widget_column:
-        st.success(f"Widget column found: '{widget_column}'")
-    else:
-        st.error("Widget column not found. Please check the column names.")
-    
+# Manual column selection
+st.subheader("Select Relevant Columns")
+widget_column = st.selectbox("Select Widget Column", [""] + list(df.columns))
+status_column = st.selectbox("Select Status Column (optional)", [""] + list(df.columns))
+section_column = st.selectbox("Select Section Column (optional)", [""] + list(df.columns))
+
+# Display sample data
+st.subheader("Sample Data (First 5 Rows)")
+st.dataframe(df.head())
+
+# Process data if columns are selected
+if widget_column:
+    st.subheader("Widgets")
+    widgets = df[widget_column].dropna().unique()
+    st.write(f"Number of unique widgets: {len(widgets)}")
+    st.write("Unique widget names:")
+    st.write(widgets)
+
     if status_column:
-        st.success(f"Status column found: '{status_column}'")
-    else:
-        st.warning("Status column not found. The app will proceed without checking widget status.")
-    
+        st.subheader("Widget Status")
+        status_counts = df[status_column].value_counts()
+        st.write(status_counts)
+
     if section_column:
-        st.success(f"Section column found: '{section_column}'")
-    else:
-        st.warning("Section column not found. Widgets will not be grouped by section.")
-    
-    # Get applicable widgets
-    if widget_column:
-        applicable_widgets = get_applicable_widgets(df, selected_attributes, widget_column, status_column)
-        
-        if applicable_widgets:
-            # Get widget order
-            widget_order = get_widget_order(df, selected_attributes, applicable_widgets, widget_column)
-            
-            # Display results
-            st.subheader(f"Widget Order for {selected_sheet}")
-            if section_column:
-                for section in df[section_column].unique():
-                    st.write(f"**{section} Section:**")
-                    section_widgets = [w for w in widget_order if w in df[df[section_column] == section][widget_column].values]
-                    for i, widget in enumerate(section_widgets):
-                        st.write(f"{i+1}. {widget}")
-                    st.write("")
-            else:
-                for i, widget in enumerate(widget_order):
-                    st.write(f"{i+1}. {widget}")
+        st.subheader("Sections")
+        sections = df[section_column].dropna().unique()
+        st.write(f"Number of unique sections: {len(sections)}")
+        st.write("Unique section names:")
+        st.write(sections)
+
+    # User attributes selection
+    st.subheader("Select User Attributes")
+    user_attributes = st.multiselect("User Attributes", [col for col in df.columns if col not in [widget_column, status_column, section_column]])
+
+    if user_attributes:
+        st.subheader("Widget Order")
+        ordered_widgets = []
+        for attr in user_attributes:
+            attr_widgets = df.sort_values(attr)[widget_column].dropna().unique()
+            ordered_widgets.extend([w for w in attr_widgets if w not in ordered_widgets])
+
+        if section_column:
+            for section in df[section_column].dropna().unique():
+                st.write(f"**{section}**")
+                section_widgets = [w for w in ordered_widgets if w in df[df[section_column] == section][widget_column].values]
+                for i, widget in enumerate(section_widgets, 1):
+                    st.write(f"{i}. {widget}")
+                st.write()
         else:
-            st.warning("No applicable widgets found for the selected attributes.")
-    else:
-        st.error("Cannot process widgets without a valid widget column.")
+            for i, widget in enumerate(ordered_widgets, 1):
+                st.write(f"{i}. {widget}")
 
 else:
-    st.error("Selected sheet not found in the Excel file.")
+    st.warning("Please select a Widget Column to proceed.")
 
-# Explanation of the logic
+# Explanation
 st.markdown("""
-### How it works:
-1. User selects the sheet (User Type, Fuel & Meter Type) and user attributes.
-2. The system attempts to identify the correct columns for widgets, status, and sections.
-3. Applicable widgets are determined based on the selected attributes and status (if available).
-4. Widgets are ordered based on the precedence of user attributes.
-5. If a section column is found, widgets are grouped by sections, maintaining their relative order within each section.
-6. The final order of widgets is displayed, either by section or as a single list.
+### How to use this tool:
+1. Select the appropriate sheet from the dropdown.
+2. Review the sheet information and column details.
+3. Select the relevant columns for Widget, Status (optional), and Section (optional).
+4. Review the sample data to confirm your column selections.
+5. If a Widget Column is selected, you'll see unique widget names and can select user attributes.
+6. The tool will display the widget order based on your selections.
+
+This interactive approach allows you to explore the data and manually select the relevant columns, 
+providing more flexibility in handling different Excel file structures.
 """)
