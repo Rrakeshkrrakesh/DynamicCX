@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Load the Excel file
-file_path = 'path_to_your_file/CX_Dynamic_Layouts_Config.xlsx'
+file_path = 'CX_Dynamic_Layouts_Config.xlsx'
 xls = pd.ExcelFile(file_path)
 
 # Load the 'Resi_Electric_AMI' sheet (or any other relevant sheet)
