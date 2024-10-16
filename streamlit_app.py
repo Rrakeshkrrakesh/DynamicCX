@@ -3,30 +3,26 @@ import pandas as pd
 import json
 
 # Load the JSON file
-file_path = 'CX_Dynamic_Layouts_Config.json'  # Replace with the actual path to your JSON file
-with open(file_path) as f:
+with open('CX_Dynamic_Layouts_Config.json') as f:
     data = json.load(f)
 
+# Convert to DataFrame for the selected sheet
+selected_sheet = "Sheet1"  # Example, replace with user selection
+df = pd.DataFrame(data[selected_sheet])
+
+# Clean up the DataFrame by dropping unwanted columns and rows with null values
+df = df.drop(columns=[col for col in df.columns if "Unnamed" in col or df[col].isnull().all()])
+
+# Rename columns if needed (e.g., 'Widget/Page' to 'Widget Name')
+df = df.rename(columns={'Widget/Page': 'Widget Name'})
+
+# Ensure critical columns are not null (add default values if necessary)
+df['Widget Name'] = df['Widget Name'].fillna('Unknown Widget')
+df['Section'] = df['Section'].fillna('Misc')
+
+# Now, proceed with the rest of your logic
 # Define user attributes and their order of precedence
-user_attributes = ['EV', 'TOU', 'Solar', 'Budget Billing', 'Demand Charge', 'Regular']
-
-# Define section order
-section_order = [
-    "Last month",
-    "Current month",
-    "Insights & trends",
-    "Promotions",
-    "Carbon Footprint",
-]
-
-# Streamlit app
-st.set_page_config(page_title="CX Dynamic Layout Configuration", layout="wide")
-st.title("CX Dynamic Layout Configuration")
-
-# Sidebar for user input
-st.sidebar.header("Configure User")
-selected_sheet = st.sidebar.selectbox("Select User Type, Fuel & Meter Type", list(data.keys()))
-selected_attributes = st.sidebar.multiselect("Select User Attributes", user_attributes)
+user_attributes = ['EV', 'TOU Rate', 'Solar', 'Budget Billing', 'Demand charge', 'Regular']
 
 # --- Functions ---
 
@@ -37,7 +33,7 @@ def get_applicable_widgets(df, attributes):
 
     applicable_widgets = []
     for _, row in df.iterrows():
-        widget = row['Widget/Page']
+        widget = row['Widget Name']
         if row['Status (if applicable)'] == 'OFF':
             continue
 
@@ -57,7 +53,7 @@ def get_widget_order(df, attributes, applicable_widgets):
 
     for attr in attributes:
         if attr in df.columns and widgets_without_order > 0:
-            attr_widgets = df[df['Widget/Page'].isin(applicable_widgets)].sort_values(attr)
+            attr_widgets = df[df['Widget Name'].isin(applicable_widgets)].sort_values(attr)
             for _, row in attr_widgets.iterrows():
                 widget = row['Widget Name']
                 if (
@@ -68,7 +64,7 @@ def get_widget_order(df, attributes, applicable_widgets):
                     widget_order.append(widget)
                     widgets_without_order -= 1
 
-    # Add any remaining widgets (shouldn't happen based on the logic)
+    # Add any remaining widgets
     for widget in applicable_widgets:
         if widget not in widget_order:
             widget_order.append(widget)
@@ -77,43 +73,43 @@ def get_widget_order(df, attributes, applicable_widgets):
 
 
 # --- Main App Logic ---
-if selected_sheet in data:
-    # Load the sheet data as a DataFrame
-    df = pd.DataFrame(data[selected_sheet])
+st.set_page_config(page_title="CX Dynamic Layout Configuration", layout="wide")
+st.title("CX Dynamic Layout Configuration")
 
-    # Get applicable widgets
-    applicable_widgets = get_applicable_widgets(df, selected_attributes)
+# Sidebar for user input
+selected_attributes = st.sidebar.multiselect("Select User Attributes", user_attributes)
 
-    # Get widget order
-    widget_order = get_widget_order(df, selected_attributes, applicable_widgets)
+# Get applicable widgets
+applicable_widgets = get_applicable_widgets(df, selected_attributes)
 
-    # Display results with section ordering and layout
-    st.subheader(f"Widget Order for {selected_sheet}")
+# Get widget order
+widget_order = get_widget_order(df, selected_attributes, applicable_widgets)
 
-    for section in section_order:
-        section_widgets = [
-            w for w in widget_order if w in df[df['Section'] == section]['Widget Name'].values
-        ]
+# Display results with section ordering and layout
+st.subheader(f"Widget Order for {selected_sheet}")
 
-        if section_widgets:
-            st.write(f"**{section} Section:**")
-            num_widgets = len(section_widgets)
+section_order = ["Last month", "Current month", "Insights & trends", "Promotions", "Carbon Footprint"]
+for section in section_order:
+    section_widgets = [
+        w for w in widget_order if w in df[df['Section'] == section]['Widget Name'].values
+    ]
 
-            if num_widgets == 1:
-                st.write(f"- {section_widgets[0]} (Full Width)")
-            else:
-                cols = st.columns(2)
-                for i, widget in enumerate(section_widgets):
-                    with cols[i % 2]:
-                        widget_display = widget
-                        if i == num_widgets - 1 and num_widgets % 2 != 0:
-                            widget_display += " (Full Width)"
-                        st.write(f"- {widget_display}")
-            st.write("")
+    if section_widgets:
+        st.write(f"**{section} Section:**")
+        num_widgets = len(section_widgets)
 
-    # Display raw data (optional)
-    with st.expander("Show raw data"):
-        st.dataframe(df)
+        if num_widgets == 1:
+            st.write(f"- {section_widgets[0]} (Full Width)")
+        else:
+            cols = st.columns(2)
+            for i, widget in enumerate(section_widgets):
+                with cols[i % 2]:
+                    widget_display = widget
+                    if i == num_widgets - 1 and num_widgets % 2 != 0:
+                        widget_display += " (Full Width)"
+                    st.write(f"- {widget_display}")
+        st.write("")
 
-else:
-    st.error("Selected sheet not found in the JSON file.")
+# Display raw data (optional)
+with st.expander("Show raw data"):
+    st.dataframe(df)
