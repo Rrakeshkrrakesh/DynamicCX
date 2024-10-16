@@ -114,7 +114,7 @@ if selected_sheet in data:
 
 
     except Exception as e:
-         st.error(f"An error occurred: {e}")
+        st.error(f"An error occurred: {e}")
         st.write("Debugging Information:")
         st.write(f"Selected Sheet: {selected_sheet}")
         st.write(f"Selected Attributes: {selected_attributes}")
