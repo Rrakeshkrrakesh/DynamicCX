@@ -3,7 +3,7 @@ import pandas as pd
 import json
 
 # Load the JSON file
-file_path = 'output.json'  # Replace with the actual path to your JSON file
+file_path = 'CX_Dynamic_Layouts_Config.json'  # Replace with the actual path to your JSON file
 with open(file_path) as f:
     data = json.load(f)
 
