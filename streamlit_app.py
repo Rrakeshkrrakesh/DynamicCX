@@ -37,7 +37,7 @@ def get_applicable_widgets(df, attributes):
 
     applicable_widgets = []
     for _, row in df.iterrows():
-        widget = row['Widget Name']
+        widget = row['Widget/Page']
         if row['Status (if applicable)'] == 'OFF':
             continue
 
@@ -57,7 +57,7 @@ def get_widget_order(df, attributes, applicable_widgets):
 
     for attr in attributes:
         if attr in df.columns and widgets_without_order > 0:
-            attr_widgets = df[df['Widget Name'].isin(applicable_widgets)].sort_values(attr)
+            attr_widgets = df[df['Widget/Page'].isin(applicable_widgets)].sort_values(attr)
             for _, row in attr_widgets.iterrows():
                 widget = row['Widget Name']
                 if (
