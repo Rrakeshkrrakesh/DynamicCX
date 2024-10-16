@@ -41,8 +41,10 @@ def get_applicable_widgets(df, attributes, kill_widgets=None):
     for _, row in df.iterrows():
         widget = row['Widget Name']
         if widget is None or (kill_widgets and widget in kill_widgets):
+            st.write(f"Widget '{widget}' excluded due to kill list.")
             continue
         if 'Status (if applicable)' in df.columns and row['Status (if applicable)'] == 'OFF':
+            st.write(f"Widget '{widget}' excluded because it is OFF.")
             continue
 
         if not attributes:  # If no attributes selected, show all widgets (except killed)
@@ -52,10 +54,12 @@ def get_applicable_widgets(df, attributes, kill_widgets=None):
         is_applicable = True
         for attr in attributes:
             if attr in df.columns and pd.notna(row.get(attr)):
+                st.write(f"Checking {widget} for attribute '{attr}': {row[attr]}")
                 if row.get(attr) == "KILL":
                     is_applicable = False
+                    st.write(f"Widget '{widget}' killed by attribute '{attr}'.")
                     break
-                elif row.get(attr) == 'PASS' or row.get(attr) in [0, "", None]:
+                elif row.get(attr) in ['PASS', 0, "", None]:
                     continue
                 else:
                     is_applicable = True
@@ -63,32 +67,30 @@ def get_applicable_widgets(df, attributes, kill_widgets=None):
         if is_applicable:
             applicable_widgets.append(widget)
 
-    return [widget for widget in applicable_widgets if widget]  # Filter out None
+    return [widget for widget in applicable_widgets if widget]  # Remove None
 
 def get_widget_order(df, attributes, applicable_widgets):
     """Determine widget order using attribute precedence and relative order."""
     widget_order = []
     widgets_without_order = applicable_widgets.copy()
 
-    for attr in user_attributes:  # Iterate through user attributes in order of precedence
+    for attr in user_attributes:
         if attr in attributes and attr in df.columns:
-            # Sort only rows that have valid numeric values or comparable data for the attribute
+            st.write(f"Sorting widgets by attribute '{attr}'")
             attr_widgets = df[df['Widget Name'].isin(widgets_without_order)]
-            try:
-                attr_widgets = attr_widgets[attr_widgets[attr].apply(lambda x: isinstance(x, (int, float)) or pd.notna(x))]
-                attr_widgets = attr_widgets.sort_values(attr, ascending=False)
-            except TypeError:
-                continue  # Skip if the column contains incompatible types
+            attr_widgets = attr_widgets[attr_widgets[attr].apply(lambda x: isinstance(x, (int, float)) or pd.notna(x))]
+            attr_widgets = attr_widgets.sort_values(attr, ascending=False)
 
             for _, row in attr_widgets.iterrows():
                 widget = row['Widget Name']
                 if pd.notna(row.get(attr)) and row.get(attr) not in ["KILL", "PASS", 0, "", None]:
                     widget_order.append(widget)
                     widgets_without_order.remove(widget)
+                    st.write(f"Widget '{widget}' added to order based on attribute '{attr}'.")
 
-    # Add any remaining widgets (that haven't been ordered by attributes)
+    # Add any remaining widgets
     widget_order.extend(widgets_without_order)
-
+    st.write(f"Remaining unordered widgets: {widgets_without_order}")
     return widget_order
 
 def display_widget_with_image(widget_name, image_path):
