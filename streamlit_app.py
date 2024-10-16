@@ -9,7 +9,7 @@ from io import BytesIO
 st.set_page_config(page_title="CX Dynamic Layout Configuration", layout="wide")
 
 # Load JSON data
-file_path = 'CX_Dynamic_Layouts_Config.json'
+file_path = 'CX_Dynamic_Layouts_Config.json'  # Replace with your actual file path
 try:
     with open(file_path) as f:
         data = json.load(f)
@@ -58,6 +58,9 @@ def get_widget_order(df, attributes, applicable_widgets):
 
     for attr in user_attributes:
         if attr in attributes and attr in df.columns:
+            # Convert to numeric for sorting, handling errors
+            df[attr] = pd.to_numeric(df[attr], errors='coerce')
+
             attr_widgets = df[df['Widget Name'].isin(widgets_without_order)].sort_values(attr)
             for _, row in attr_widgets.iterrows():
                 widget = row['Widget Name']
@@ -82,6 +85,7 @@ def display_widget_with_image(widget_name, image_path):
         st.write(f"{widget_name} (Image not available: {e})")
 
 
+
 # --- Main App Logic ---
 
 st.title("CX Dynamic Layout Configuration")
@@ -90,19 +94,30 @@ st.title("CX Dynamic Layout Configuration")
 st.sidebar.header("Configure User")
 selected_sheet = st.sidebar.selectbox("Select User Type...", list(data.keys()))
 
+
 if selected_sheet in data and data[selected_sheet]:
     df_initial = pd.DataFrame(data[selected_sheet])
     available_attributes = [attr for attr in user_attributes if attr in df_initial.columns]
     selected_attributes = st.sidebar.multiselect("Select User Attributes", available_attributes)
-    kill_widgets = st.sidebar.multiselect("Widgets to Kill", df_initial['Widget Name'].unique() if 'Widget Name' in df_initial else [])
+    if 'Widget Name' in df_initial: #Only create multiselect if there are applicable widgets
+        kill_widgets = st.sidebar.multiselect("Widgets to Kill", df_initial['Widget Name'].unique())
+    else:
+        kill_widgets = []
+
 
     try:
         df = pd.DataFrame(data[selected_sheet])
 
+        # Rename columns if necessary ('Widget/Page' to 'Widget Name')
         if 'Widget/Page' in df.columns:
             df = df.rename(columns={'Widget/Page': 'Widget Name'})
-
         widget_name_column = 'Widget Name' if 'Widget Name' in df.columns else 'Widget/Page'
+
+
+        # Data type conversion *before* calling other functions
+        for col in user_attributes:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
 
         applicable_widgets = get_applicable_widgets(df, selected_attributes, kill_widgets)
         widget_order = get_widget_order(df, selected_attributes, applicable_widgets)
@@ -111,16 +126,18 @@ if selected_sheet in data and data[selected_sheet]:
         # Display
         st.subheader(f"Widget Order for {selected_sheet}")
         for section in section_order:
-            section_widgets = [w for w in widget_order if w in df[df['Section'] == section][widget_name_column].values]
+            section_widgets = [w for w in widget_order if section in df[df[widget_name_column] == w]['Section'].values ]
             if section_widgets:
                 st.write(f"**{section} Section:**")
                 for widget in section_widgets:
-                    widget_row = df[df[widget_name_column] == widget].iloc[0]
-                    if 'Image' in df.columns and pd.notna(widget_row['Image']):
-                        image_path = widget_row['Image']
-                        display_widget_with_image(widget, image_path)
-                    else:
-                        st.write(f"- {widget}")
+                    matching_rows = df[df[widget_name_column] == widget]
+                    if not matching_rows.empty:
+                        widget_row = matching_rows.iloc[0]
+                        if 'Image' in df.columns and pd.notna(widget_row['Image']):
+                            image_path = widget_row['Image']
+                            display_widget_with_image(widget, image_path)
+                        else:
+                            st.write(f"- {widget}")
                 st.write("")
 
         with st.expander("Show raw data"):
@@ -128,6 +145,7 @@ if selected_sheet in data and data[selected_sheet]:
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
-        # ... (debugging info - add back if needed)
+        # ... debugging info (add back as needed)
+
 else:
     st.error("Selected sheet not found or empty.")
