@@ -1,9 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
-from PIL import Image
-import requests
-from io import BytesIO
+
 
 # Streamlit app configuration
 st.set_page_config(page_title="CX Dynamic Layout Configuration", layout="wide")
@@ -84,17 +82,6 @@ def get_widget_order(df, attributes, applicable_widgets, widget_column):
 
     return widget_order
 
-def display_widget_with_image(widget_name, image_path):
-    """Display the widget's image or an error message."""
-    try:
-        if image_path.startswith('http'):
-            response = requests.get(image_path)
-            img = Image.open(BytesIO(response.content))
-        else:
-            img = Image.open(image_path)
-        st.image(img, caption=widget_name, use_column_width=True)
-    except Exception as e:
-        st.write(f"{widget_name} (Image not available at {image_path}: {str(e)})")
 
 # --- Main App Logic ---
 
@@ -107,8 +94,7 @@ selected_sheet = st.sidebar.selectbox("Select User Type, Fuel & Meter Type", lis
 if selected_sheet in data:
     df_initial = pd.DataFrame(data[selected_sheet])
 
-    # Display available column names for debugging
-    st.write("Available columns:", df_initial.columns)
+   
 
     # Detect widget name column dynamically
     widget_column = None
