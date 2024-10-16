@@ -1,0 +1,1713 @@
+{
+  "Rules": [
+    {
+      "S. No.": 1.0,
+      "Rule": "Each attribute for a user is read from left to right ",
+      "SN": 1.0,
+      "Rules": "User attributes\n \nThe user attribute is mentioned on the column name eg. Regular, EV, Solar, etc. \"Regular\" signifies user doesn't have any other attributes like EV, SOLAR, TOU, etc.",
+      "Status (if applicable)": null
+    },
+    {
+      "S. No.": null,
+      "Rule": null,
+      "SN": 2.0,
+      "Rules": "Understanding the organisation of this spreadsheet\n\nEach sheet describes the order of widgets within each \"section\" for a \"User\" , \"Fuel\" & \"Meter Type\". A section is a group of widgets as per the section name i.e \"Last month\" section means all the widgets in this section will display info related to last month. \nNote: The name of the sheet is defined as per User, Fuel & Meter types as described below \n1. \"User\" =  Residential (or Resi) and Small & Medium Business (SMB). \n2. \"Fuel\" = Electric, Water, Gas etc.\n3. \"Meter\" = AMI, AMR, NSM etc.",
+      "Status (if applicable)": null
+    },
+    {
+      "S. No.": 2.0,
+      "Rule": "The grid will indicate 2 things: the section in which the widget is placed and its order within that section",
+      "SN": 3.0,
+      "Rules": "Understanding each tab/sheet\n\nFollowing information is described in each sheet \n1. Column A: Section name is assigned to a group of similar widgets such as Last Month, Current Month, Insights & trends etc.\n2. Column B: Name of the widget or page within each section such as Bill summary, Bill itemization, Solar Energy Flow\n3. Column C: Flag to signify whether the widget is \"New or Existing\"\n4. Column D & other columns after column D: These columns have numbers signifying the relative order of each widget among all widgets in that section for the \"User type\" mentioned in the column heading. The order in each column is applicable only for a user with the user attribute mentioned in the column heading i.e In \"EV\" column the priority will be applicable only for a user who is classified as 'EV' user and doesn't have any other attribute like Solar, TOU, Budget Billing etc. For a user with multiple user attributes like EV, Solar, TOU etc., the priority order of all applicable widgets is defined in rules. ",
+      "Status (if applicable)": "Complete"
+    },
+    {
+      "S. No.": null,
+      "Rule": null,
+      "SN": 4.0,
+      "Rules": "Configuration to turn ON/OFF a widget & concept of \"applicable widgets\"\n\nConfiguration for turning ON/OFF a widget at pilot so that any will can be KILLED (or not displayed to user) when not required by a utility due to data unavailability. We can treat relative order to be zero for such widget for the concerned user attribute. \n\nThis means there will be a need to identify applicable widgets for a user based on user attributes (EV, Solar, TOu etc) and then remove any widget which the utility has asked to be turned off. We will call the final list of widgets to be displayed to a user as \"applicable widgets\" in this document going forward. This is explained in later steps.\n\nExample: A utility can choose to TURN OFF the bill projection widget for Resi_Electric_AMI user. This means that Bill projection widget will be killed for this utility across all user attributes because on data unavailability. \n",
+      "Status (if applicable)": "To be developed"
+    },
+    {
+      "S. No.": null,
+      "Rule": null,
+      "SN": 5.0,
+      "Rules": "Ordering of sections\n\na) Sections are ordered in a fixed order as defined below for all \"User\" , \"Fuel\" & \"Meter Type\"  :\n1. Last month\n2. Current month\n3. Insights & trends\n4. Promotions\n5. Carbon Footprint \n\nThis means all applicable widgets in the \"Last month\" section as per user attribute (Regular, EV, Solar etc) will be displayed on top will follow the above order with \"Carbon footprint\" widgets in bottom.\n\nb) If there no applicable widgets in any section then the section name won't be displayed. \nExample 1. For Resi_Water users, \"Carbon footprint\" section has no widgets and therefore it won't be shown on the webpage. Even the name \"Carbon Footprint\" will disappear. \nExample 2. For Resi_Electric_AMI users, if utility has turned off the \"Bill projection\" widget for a \"Regular\" user then \"Current Month\" section will not be displayed as there won't be any applicable widgets under this section.\n\n\n\n",
+      "Status (if applicable)": "To be developed"
+    },
+    {
+      "S. No.": 3.0,
+      "Rule": "The number indicated in each cell in the grid is the position of the widget as per the attribute.",
+      "SN": 6.0,
+      "Rules": "Relative order of widget within a section\n\nWhat does the different values for relative order mean for a user with single user attribute?\n\n1. A nonzero integer value assgined for the relative order means that the widget will be displayed for the user on web. Lower the number assigned, earlier the widget will be placed within that section. Eg. If W1, W2 & W3 are three widgets with orders 2 , 1 & 3 respectively. Then widgets will be ordered in following order W2, W1, W3\n2. Zero: Kill the widget i.e do not show it on the web for that user. This will be useful when multiple user attributes in addtion to solar users are also applicable.  Eg Bill Projection is not displayed for a solar user therefore Bill projection has been assigned 0 value for Solar even if the user is an EV user too where Bill projection is displayed. In this scenario Bill projection is killed & relative order for EV is ignored.  \n3. Blank: The widget is not applicable for the user type hence no priority is assigned. Eg. Solar Energy Flow is only applicable for user with \"Solar\" as user attribute, therefore it has been left blank for other user types such as EV, Regular, Budget Billign etc.\n\nFor a user with multiple user attributes like EV, Solar, TOU etc., the order of all applicable widgets is defined in rules. ",
+      "Status (if applicable)": "In Dev - Zero Vs Blank"
+    },
+    {
+      "S. No.": null,
+      "Rule": null,
+      "SN": 7.0,
+      "Rules": "Relative order of the widget within a section (For single user attribute)\n\nOrder is decided from top (lowest priority) to bottom (lowest priority). Within each row 2 widgets can fit with higher priority widget occupying the left position. \nThe values for relative order mentioned in the sheet 1,2,3 etc are relative values only and doesn't necessarily mean the widget would be displayed at 1st, 2nd 3rd positions respectively.\nWhy? --> If utility decides to turn OFF any widget then relative order won't be applicable for that widget. Eg. A widget with relative order 2 is turned OFF then widget with relative order 3 would jump 1 place up. ",
+      "Status (if applicable)": "Complete"
+    },
+    {
+      "S. No.": 4.0,
+      "Rule": "The grid will be organized in such a way that the attributes appear in the order of weightage from left to right. That is, the most important attribute being on the extreme left and the least important on the extreme right",
+      "SN": 8.0,
+      "Rules": "Relative order of the widget within a section (For multiple user attribute)\n\nHow is the relative order defined for a widget for a user with multiple user attribute (Eg. A user has attributes = EV, Solar & Budget Billing user) for a particular user (SMB/Resi), Fuel (Electric/Gas/Water) and Meter Type (AMI/AMR/NSM)?\n\nLet's understand the logic to be followed for \"Last month\" & \"Current Month\" section by taking an example of a Resi_Electric_AMI user with user attributes of EV, Solar & Demand Charge. Assume \"Solar energy flow\" widget has been TURNED OFF by the utility\n\nStep 1: Identify all \"applicable\" widgets that are meant to be displayed as per multiple user attributes:\na) Create a list of widgets with nonzero relative order value. \nFor our example, we've following widgets with nonzero relative order for EV, Solar & Demand Charge\n\nLast month section\n- Bill summary\n- Bill itemization\n- Solar Energy Flow\n- Demand charge \n\nCurrent month section\n- Bill Projection\n- TOU Usage Distribution\n\n\nb) Remove any widget with relative order value = 0 in the list generated in (a)\n\nFor our example, we've \"Bill Projection\" with relative order = 0 for Solar in the \"Current Month\" section. The updated list is as follows\n\nLast month section\n- Bill summary\n- Bill itemization\n- Solar Energy Flow\n- Demand charge \n\nCurrent month section\n- TOU Usage Distribution\n\nc) Remove any widget that has been turned off by the utility. This is the list of all \"Applicable Widgets\" for the user. \n\nFor our example, utility had decided to turn off \"Solar Energy Flow\". Thus the list of \"applicable widgets\" \n\nLast month section\n- Bill summary\n- Bill itemization\n- Solar Energy Flow\n- Demand charge \n\nCurrent month section\n- TOU Usage Distribution\n\nStep 2: Derive relative order of all apllicable widgets obtained in step 1 (c) using the logic below.\n\nThis precendence order is followed to arrive at the final order of the widgets EV > TOU > SOLAR > BUDGET BILLING > DEMAND CHARGE. \nStart with initial count of applicable widgets without order: WIDGET_WTHOUT_ORDER = N\na) This means for all applicable widgets, widgets applicable for EV would be displayed first in the relative order defined in the EV column. \nUpdate WIDGET_WTHOUT_ORDER = N - widgets ordered in this step. WIDGET_WTHOUT_ORDER = 1 then assign last relative order (N). DON'T go to next step.  \nb) Then among the remaining applicable widgets, TOU widgets would be displayed in the relative order defined in the TOU column.\nUpdate WIDGET_WTHOUT_ORDER = N - widgets ordered in this step. WIDGET_WTHOUT_ORDER = 1 then assign last relative order (N). DON'T go to next step.\nc) Then among the remaining applicable widgets, SOLAR widgets would be displayed in the relative order defined in the SOLAR column.\nUpdate WIDGET_WTHOUT_ORDER = N - widgets ordered in this step. WIDGET_WTHOUT_ORDER = 1 then assign last relative order (N). DON'T go to next step.\nd) Then among the remaining applicable widgets, BUDGET BILLING widgets would be displayed in the relative order defined in the BUDGET BILLING column.\nUpdate WIDGET_WTHOUT_ORDER = N - widgets ordered in this step. WIDGET_WTHOUT_ORDER = 1 then assign last relative order (N). DON'T go to next step.\ne) Then among the remaining applicable widgets, DEMAND CHARGE widgets would be displayed in the relative order defined in the DEMAND CHARGE column.\n\n\n\nLet's understand this using 2 examples.\n\nExample 1: Continuing our initial example in step 1 \nWe have following applicable widgets in the \"Last month\" section\n- Bill summary\n- Bill itemization\n- Demand charge \n\nWIDGET_WTHOUT_ORDER = 3 (total number of applciable widgets are 3 as listed above)\n\nNow let's apply our logic step by step:\na) Widgets applicable for EV are \"Bill Summary\" and \"Bill Itemization\", therefore these widgets would be displayed first in the relative order mentioned in \"EV\" column.\nBill Summary - 1\nBill Itemization - 2\n\nNow we've relative orders for \"Bill Summary\" and \"Bill Itemization\" widgets. The remaing applicable widgets without any relative order is \"Demand charge\"\nWIDGET_WTHOUT_ORDER = 3-2 = 1 (Since 2 widgets have been assigned relative order in this step). \n\nSince WIDGET_WTHOUT_ORDER = 1, the last widget \"DEMAND CHARGE\" widget is assigned a relative order = N= 3. We will not go to the next step now as per our logic.\n\nThus, final relative orders for all widgets are as follows:\nBill Summary - 1\nBill Itemization - 2\nDemand Charge - 3\n\nExample 2: In our previous example let's take a scenario where a utility did not decide to TURN OFF \"Solar Energy Flow\" widget. \nIn such case, the list of applicable widget is updated below for the \"Last Month\" section.\n\nWe have following applicable widgets in the \"Last month\" section\n- Bill summary\n- Bill itemization\n- Solar Energy Flow\n- Demand charge \n\nWIDGET_WTHOUT_ORDER = 4 (total number of applciable widgets are 4 as listed above)\n\nNow let's apply our logic step by step:\na) EV: Widgets applicable for EV are \"Bill Summary\" and \"Bill Itemization\", therefore these widgets would be displayed first in the relative order mentioned in \"EV\" column.\nBill Summary - 1\nBill Itemization - 2\n\nNow we've relative orders for \"Bill Summary\" and \"Bill Itemization\" widgets. \nWIDGET_WTHOUT_ORDER = 4-2 = 2. Remaining applicable widgets are \"Solar Energy Flow\" and \"Demand Charge\"\n\nSince WIDGET_WTHOUT_ORDER = 2,Go to the next step now as per our logic.\n\nb) TOU: Among the remaining widgets applicable, no widget is the applicable for TOU, no widget would be assigned a relative order.\nBill Summary - 1\nBill Itemization - 2\n\nWIDGET_WTHOUT_ORDER = 4-2 = 2 (Since 2 widgets have been assigned relative order in this step). \n\nSince WIDGET_WTHOUT_ORDER = 2. Go to the next step now as per our logic.\n\nc) SOLAR: Among the remaining widgets applicable, \"Solar Energy Flow\" is the only widget applicable for SOLAR, therefore these widgets would be displayed first in the relative order mentioned in \"EV\" column.\nBill Summary - 1\nBill Itemization - 2\nSolar Energy Flow - 3 \n\nNow we've relative orders for \"Bill Summary\",  \"Bill Itemization\" & \"Solar Energy Flow\" widgets. The remaining applicable widgets without any relative order is \"Demand charge\"\nWIDGET_WTHOUT_ORDER = 4-3 = 2 (Since 3 widgets have been assigned relative order in this step). \n\nSince WIDGET_WTHOUT_ORDER = 1, the last widget \"DEMAND CHARGE\" widget is assigned a relative order = N= 3. We will not go to the next step now as per our logic.\n\nThus, final relative orders for all widgets are as follows:\nBill Summary - 1\nBill Itemization - 2\nSolar Energy Flow - 3 \nDemand Charge - 4\n",
+      "Status (if applicable)": "PDP"
+    },
+    {
+      "S. No.": 5.0,
+      "Rule": "When the widget order given by an atribute is in conflict with the other, the order given by the higher weightage attribute would be considered",
+      "SN": 9.0,
+      "Rules": "In a section, if an odd number of widgets is included in the grid, then the last one will automatically render in full width. ",
+      "Status (if applicable)": "Complete"
+    },
+    {
+      "S. No.": 6.0,
+      "Rule": "If any attribute that is applicable for a user dictates the order of a widget as 0 (zero), it will considered a killer and not shown at all regardless of what other attributes dictate",
+      "SN": 10.0,
+      "Rules": "In a section, if an even number if widgets are included in the grid, then all of them will render in half width and occupy half of the width each (two in a row, two columns)",
+      "Status (if applicable)": "Complete"
+    },
+    {
+      "S. No.": 7.0,
+      "Rule": "In a section, if only 1 widget is included in the grid, then the widget will automatically render in full size (occupy complete width).",
+      "SN": 11.0,
+      "Rules": "In mobile view, all widgets adapt to smaller width automatically and hence render in full width (one by one) - no two columns.",
+      "Status (if applicable)": "In Dev"
+    },
+    {
+      "S. No.": 7.1,
+      "Rule": "In a section, if an odd number of widgets is included in the grid, then the last one will automatically render in full width. ",
+      "SN": 12.0,
+      "Rules": "Height flexibility - make sure the heights are flexible for each widget to ensure same height in each row",
+      "Status (if applicable)": "In Dev"
+    },
+    {
+      "S. No.": 7.2,
+      "Rule": "In a section, if an even number if widgets are included in the grid, then all of them will render in half width and occupy half of the width each (two in a row, two columns)",
+      "SN": null,
+      "Rules": null,
+      "Status (if applicable)": null
+    },
+    {
+      "S. No.": 7.3,
+      "Rule": "In mobile view, all widgets adapt to smaller width automatically and hence render in full width (one by one) - no two columns.",
+      "SN": null,
+      "Rules": null,
+      "Status (if applicable)": null
+    },
+    {
+      "S. No.": null,
+      "Rule": null,
+      "SN": null,
+      "Rules": null,
+      "Status (if applicable)": null
+    },
+    {
+      "S. No.": null,
+      "Rule": "Items to discuss",
+      "SN": null,
+      "Rules": null,
+      "Status (if applicable)": null
+    },
+    {
+      "S. No.": null,
+      "Rule": "0 vs blank",
+      "SN": null,
+      "Rules": null,
+      "Status (if applicable)": null
+    },
+    {
+      "S. No.": null,
+      "Rule": "SMB - mutually exclusive groups or not",
+      "SN": null,
+      "Rules": null,
+      "Status (if applicable)": null
+    },
+    {
+      "S. No.": null,
+      "Rule": "Section names appearing on FE",
+      "SN": null,
+      "Rules": null,
+      "Status (if applicable)": null
+    },
+    {
+      "S. No.": null,
+      "Rule": "Resi / Gas - What user attributes are applicable",
+      "SN": null,
+      "Rules": null,
+      "Status (if applicable)": null
+    }
+  ],
+  "Resi_Electric_AMI": [
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": "New/Existing",
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": "Comments"
+    },
+    {
+      "Section": "Last month",
+      "Widget/Page": "Bill summary",
+      "Unnamed: 2": "Existing",
+      "Regular": 1,
+      "EV": 1,
+      "TOU Rate": 1,
+      "Solar": 1,
+      "Budget Billing": 1,
+      "Demand charge": 1,
+      "Unnamed: 9": null,
+      "Unnamed: 10": 1
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Bill itemization",
+      "Unnamed: 2": "Existing",
+      "Regular": 2,
+      "EV": 2,
+      "TOU Rate": 2,
+      "Solar": 2,
+      "Budget Billing": 2,
+      "Demand charge": 2,
+      "Unnamed: 9": null,
+      "Unnamed: 10": 2
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Solar Energy Flow",
+      "Unnamed: 2": "Existing",
+      "Regular": "PASS",
+      "EV": "PASS",
+      "TOU Rate": "PASS",
+      "Solar": 3,
+      "Budget Billing": "PASS",
+      "Demand charge": "PASS",
+      "Unnamed: 9": null,
+      "Unnamed: 10": 3
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Demand charge [not in scope now]",
+      "Unnamed: 2": "New",
+      "Regular": "PASS",
+      "EV": "PASS",
+      "TOU Rate": "PASS",
+      "Solar": "PASS",
+      "Budget Billing": "PASS",
+      "Demand charge": 3,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": "Carbon insight is a full size widget typically and comes in the end, but a half size one and comes under last month section when solar. I don't see/know how the grid system can handle this.\n\nIt also is a half size widget under last month section in case of resi NSM and gas fuel"
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": "Current month",
+      "Widget/Page": "Bill projection",
+      "Unnamed: 2": "Existing",
+      "Regular": 1,
+      "EV": 2,
+      "TOU Rate": 2,
+      "Solar": "KILL",
+      "Budget Billing": 1,
+      "Demand charge": 1,
+      "Unnamed: 9": null,
+      "Unnamed: 10": 0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "TOU Usage Distribution [not in scope now]",
+      "Unnamed: 2": "New",
+      "Regular": "PASS",
+      "EV": 1,
+      "TOU Rate": 1,
+      "Solar": "PASS",
+      "Budget Billing": "PASS",
+      "Demand charge": "PASS",
+      "Unnamed: 9": null,
+      "Unnamed: 10": 1
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": "Insights & trends",
+      "Widget/Page": "Bill history",
+      "Unnamed: 2": "Existing",
+      "Regular": 1,
+      "EV": 1,
+      "TOU Rate": 1,
+      "Solar": 1,
+      "Budget Billing": 1,
+      "Demand charge": 1,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Your insights",
+      "Unnamed: 2": "Existing",
+      "Regular": 2,
+      "EV": 2,
+      "TOU Rate": 2,
+      "Solar": 2,
+      "Budget Billing": 2,
+      "Demand charge": 2,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": "Promotions",
+      "Widget/Page": "Program widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 1,
+      "EV": 1,
+      "TOU Rate": 1,
+      "Solar": 1,
+      "Budget Billing": 1,
+      "Demand charge": 1,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": "Carbon footprint",
+      "Widget/Page": "Carbon widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 1,
+      "EV": 1,
+      "TOU Rate": 1,
+      "Solar": 1,
+      "Budget Billing": 1,
+      "Demand charge": 1,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    }
+  ],
+  "Resi_Water": [
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": "New/Existing",
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": "Client: OUC"
+    },
+    {
+      "Section": "Last month",
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": "Prospective: DEWA"
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Bill summary",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Itemization",
+      "Unnamed: 2": "New",
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": "Current month",
+      "Widget/Page": "Bill Projection",
+      "Unnamed: 2": "New",
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": "Insights & trends",
+      "Widget/Page": "Bill history",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Your insights",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    },
+    {
+      "Section": "Promotions",
+      "Widget/Page": "Program widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 3.0,
+      "Unnamed: 4": null,
+      "Unnamed: 5": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null,
+      "Unnamed: 10": null
+    }
+  ],
+  "Resi_electric_AMR": [
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": "New/Existing",
+      "Regular": null,
+      "EV": null,
+      "Solar": null,
+      "Budget Billing": null
+    },
+    {
+      "Section": "Last month",
+      "Widget/Page": "Bill itemization",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0,
+      "EV": 2.0,
+      "Solar": 2.0,
+      "Budget Billing": 2.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Bill summary",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0,
+      "EV": 1.0,
+      "Solar": 1.0,
+      "Budget Billing": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Energy Flow",
+      "Unnamed: 2": "Existing",
+      "Regular": null,
+      "EV": null,
+      "Solar": 3.0,
+      "Budget Billing": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Demand charge",
+      "Unnamed: 2": "New",
+      "Regular": null,
+      "EV": null,
+      "Solar": 4.0,
+      "Budget Billing": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "Solar": null,
+      "Budget Billing": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "Solar": null,
+      "Budget Billing": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "Solar": null,
+      "Budget Billing": null
+    },
+    {
+      "Section": "Current month",
+      "Widget/Page": "Bill projection",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0,
+      "EV": 1.0,
+      "Solar": 0.0,
+      "Budget Billing": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Solar generation (TBD)",
+      "Unnamed: 2": "New",
+      "Regular": null,
+      "EV": null,
+      "Solar": 2.0,
+      "Budget Billing": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "Solar": null,
+      "Budget Billing": null
+    },
+    {
+      "Section": "Insights & trends",
+      "Widget/Page": "Bill history",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0,
+      "EV": 1.0,
+      "Solar": 1.0,
+      "Budget Billing": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Your insights",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0,
+      "EV": 2.0,
+      "Solar": 2.0,
+      "Budget Billing": 2.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Program widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 3.0,
+      "EV": 3.0,
+      "Solar": 3.0,
+      "Budget Billing": 3.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Carbon widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 4.0,
+      "EV": 4.0,
+      "Solar": 4.0,
+      "Budget Billing": 4.0
+    }
+  ],
+  "Resi_Electric_NSM": [
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": "New/Existing",
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": "Last month",
+      "Widget/Page": "Bill itemization",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0,
+      "EV": 2.0,
+      "TOU Rate": 0.0,
+      "Solar": 0.0,
+      "Budget Billing": 2.0,
+      "Demand charge": 2.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Bill summary",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0,
+      "EV": 0.0,
+      "TOU Rate": 0.0,
+      "Solar": 0.0,
+      "Budget Billing": 0.0,
+      "Demand charge": 0.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Energy Flow",
+      "Unnamed: 2": "Existing",
+      "Regular": 0.0,
+      "EV": 0.0,
+      "TOU Rate": 0.0,
+      "Solar": 0.0,
+      "Budget Billing": 0.0,
+      "Demand charge": 0.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Demand charge",
+      "Unnamed: 2": "New",
+      "Regular": 0.0,
+      "EV": 0.0,
+      "TOU Rate": 0.0,
+      "Solar": 0.0,
+      "Budget Billing": 0.0,
+      "Demand charge": 0.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": "Current month",
+      "Widget/Page": "Bill projection",
+      "Unnamed: 2": "Existing",
+      "Regular": 0.0,
+      "EV": 0.0,
+      "TOU Rate": 0.0,
+      "Solar": 0.0,
+      "Budget Billing": 0.0,
+      "Demand charge": 0.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Solar generation (TBD)",
+      "Unnamed: 2": "New",
+      "Regular": 0.0,
+      "EV": 0.0,
+      "TOU Rate": 0.0,
+      "Solar": 0.0,
+      "Budget Billing": 0.0,
+      "Demand charge": 0.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "TOU Usage Distribution",
+      "Unnamed: 2": "New",
+      "Regular": 0.0,
+      "EV": 0.0,
+      "TOU Rate": 0.0,
+      "Solar": 0.0,
+      "Budget Billing": 0.0,
+      "Demand charge": 0.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null,
+      "EV": null,
+      "TOU Rate": null,
+      "Solar": null,
+      "Budget Billing": null,
+      "Demand charge": null,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": "Insights & trends",
+      "Widget/Page": "Bill history",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0,
+      "EV": 0.0,
+      "TOU Rate": 0.0,
+      "Solar": 0.0,
+      "Budget Billing": 0.0,
+      "Demand charge": 0.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Your insights",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0,
+      "EV": 0.0,
+      "TOU Rate": 0.0,
+      "Solar": 0.0,
+      "Budget Billing": 0.0,
+      "Demand charge": 0.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Program widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 3.0,
+      "EV": 0.0,
+      "TOU Rate": 0.0,
+      "Solar": 0.0,
+      "Budget Billing": 0.0,
+      "Demand charge": 0.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Carbon widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 4.0,
+      "EV": 4.0,
+      "TOU Rate": 4.0,
+      "Solar": 4.0,
+      "Budget Billing": 4.0,
+      "Demand charge": 4.0,
+      "Unnamed: 9": null,
+      "Comment": null
+    }
+  ],
+  "Resi_Gas_AMI": [
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": "New/Existing",
+      "Regular": null
+    },
+    {
+      "Section": "Last month",
+      "Widget/Page": "Bill itemization",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Bill summary",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Energy Flow",
+      "Unnamed: 2": "Existing",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Demand charge",
+      "Unnamed: 2": "New",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Carbon widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 3.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": "Current month",
+      "Widget/Page": "Bill projection",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Solar generation (TBD)",
+      "Unnamed: 2": "New",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "TOU Usage Distribution",
+      "Unnamed: 2": "New",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": "Insights & trends",
+      "Widget/Page": "Bill history",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Your insights",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": "Promotion",
+      "Widget/Page": "Program widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 3.0
+    }
+  ],
+  "Resi_Gas_AMR": [
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": "New/Existing",
+      "Regular": null
+    },
+    {
+      "Section": "Last month",
+      "Widget/Page": "Bill itemization",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Bill summary",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Energy Flow",
+      "Unnamed: 2": "Existing",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Demand charge",
+      "Unnamed: 2": "New",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Carbon widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 3.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": "Current month",
+      "Widget/Page": "Bill projection",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Solar generation (TBD)",
+      "Unnamed: 2": "New",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "TOU Usage Distribution",
+      "Unnamed: 2": "New",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": "Insights & trends",
+      "Widget/Page": "Bill history",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Your insights",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Program widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 3.0
+    }
+  ],
+  "Resi_Gas_NSM": [
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": "New/Existing",
+      "Regular": null
+    },
+    {
+      "Section": "Last month",
+      "Widget/Page": "Bill itemization",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Bill summary",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Energy Flow",
+      "Unnamed: 2": "Existing",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Demand charge",
+      "Unnamed: 2": "New",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Carbon widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 3.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": "Current month",
+      "Widget/Page": "Bill projection",
+      "Unnamed: 2": "Existing",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Solar generation (TBD)",
+      "Unnamed: 2": "New",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "TOU Usage Distribution",
+      "Unnamed: 2": "New",
+      "Regular": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular": null
+    },
+    {
+      "Section": "Insights & trends",
+      "Widget/Page": "Bill history",
+      "Unnamed: 2": "Existing",
+      "Regular": 1.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Your insights",
+      "Unnamed: 2": "Existing",
+      "Regular": 2.0
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Program widget",
+      "Unnamed: 2": "Existing",
+      "Regular": 3.0
+    }
+  ],
+  "SMB_Electric_AMI": [
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": "New/Existing",
+      "Regular without operating hours": null,
+      "Regular without Rates w/o operating hours": null,
+      "Regular with operating hours ": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": "Comments"
+    },
+    {
+      "Section": "Last month",
+      "Widget/Page": "Bill itemization",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 2.0,
+      "Regular without Rates w/o operating hours": 2.0,
+      "Regular with operating hours ": 2.0,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Bill summary",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 1.0,
+      "Regular without Rates w/o operating hours": 1.0,
+      "Regular with operating hours ": 1.0,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Operating hours",
+      "Unnamed: 2": "New",
+      "Regular without operating hours": 0.0,
+      "Regular without Rates w/o operating hours": 0.0,
+      "Regular with operating hours ": 3.0,
+      "Unnamed: 6": null,
+      "Unnamed: 7": "Carbon insight is a full size widget typically and comes in the end, but a half size one and comes under last month section when solar. I don't see/know how the grid system can handle this.\n\nIt also is a half size widget under last month section in case of resi NSM and gas fuel"
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular without operating hours": null,
+      "Regular without Rates w/o operating hours": null,
+      "Regular with operating hours ": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular without operating hours": null,
+      "Regular without Rates w/o operating hours": null,
+      "Regular with operating hours ": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null
+    },
+    {
+      "Section": "Current month",
+      "Widget/Page": "Bill projection",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 1.0,
+      "Regular without Rates w/o operating hours": 0.0,
+      "Regular with operating hours ": 1.0,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular without operating hours": null,
+      "Regular without Rates w/o operating hours": null,
+      "Regular with operating hours ": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": "Those highlighted in pale yellow are in future scope"
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular without operating hours": null,
+      "Regular without Rates w/o operating hours": null,
+      "Regular with operating hours ": null,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null
+    },
+    {
+      "Section": "Insights & trends",
+      "Widget/Page": "Bill history",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 1.0,
+      "Regular without Rates w/o operating hours": 1.0,
+      "Regular with operating hours ": 1.0,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Your insights",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 2.0,
+      "Regular without Rates w/o operating hours": 2.0,
+      "Regular with operating hours ": 2.0,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Program widget",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 3.0,
+      "Regular without Rates w/o operating hours": 3.0,
+      "Regular with operating hours ": 3.0,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Carbon widget",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 4.0,
+      "Regular without Rates w/o operating hours": 4.0,
+      "Regular with operating hours ": 4.0,
+      "Unnamed: 6": null,
+      "Unnamed: 7": null
+    }
+  ],
+  "SMB_Electric_NSM": [
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": "New/Existing",
+      "Regular without operating hours": null,
+      "Regular without Rates w/o operating hours": null,
+      "Regular with operating hours ": null,
+      "TOU Rate": null,
+      "Demand charge": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": "Comments"
+    },
+    {
+      "Section": "Last month",
+      "Widget/Page": "Bill itemization",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 2.0,
+      "Regular without Rates w/o operating hours": 2.0,
+      "Regular with operating hours ": 2.0,
+      "TOU Rate": 2.0,
+      "Demand charge": 2.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Bill summary",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 1.0,
+      "Regular without Rates w/o operating hours": 1.0,
+      "Regular with operating hours ": 1.0,
+      "TOU Rate": 1.0,
+      "Demand charge": 1.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Operating hours",
+      "Unnamed: 2": "New",
+      "Regular without operating hours": 0.0,
+      "Regular without Rates w/o operating hours": 0.0,
+      "Regular with operating hours ": 0.0,
+      "TOU Rate": 4.0,
+      "Demand charge": 4.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": "Carbon insight is a full size widget typically and comes in the end, but a half size one and comes under last month section when solar. I don't see/know how the grid system can handle this.\n\nIt also is a half size widget under last month section in case of resi NSM and gas fuel"
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular without operating hours": null,
+      "Regular without Rates w/o operating hours": null,
+      "Regular with operating hours ": null,
+      "TOU Rate": null,
+      "Demand charge": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular without operating hours": null,
+      "Regular without Rates w/o operating hours": null,
+      "Regular with operating hours ": null,
+      "TOU Rate": null,
+      "Demand charge": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": "Those highlighted in pale yellow are in future scope"
+    },
+    {
+      "Section": "Current month",
+      "Widget/Page": "Bill projection",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 0.0,
+      "Regular without Rates w/o operating hours": 0.0,
+      "Regular with operating hours ": 0.0,
+      "TOU Rate": 2.0,
+      "Demand charge": 1.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular without operating hours": null,
+      "Regular without Rates w/o operating hours": null,
+      "Regular with operating hours ": null,
+      "TOU Rate": null,
+      "Demand charge": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular without operating hours": null,
+      "Regular without Rates w/o operating hours": null,
+      "Regular with operating hours ": null,
+      "TOU Rate": null,
+      "Demand charge": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": "Insights & trends",
+      "Widget/Page": "Bill history",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 1.0,
+      "Regular without Rates w/o operating hours": 1.0,
+      "Regular with operating hours ": 1.0,
+      "TOU Rate": 1.0,
+      "Demand charge": 1.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Your insights",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 2.0,
+      "Regular without Rates w/o operating hours": 2.0,
+      "Regular with operating hours ": 2.0,
+      "TOU Rate": 2.0,
+      "Demand charge": 2.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Program widget",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 3.0,
+      "Regular without Rates w/o operating hours": 3.0,
+      "Regular with operating hours ": 3.0,
+      "TOU Rate": 3.0,
+      "Demand charge": 3.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Carbon widget",
+      "Unnamed: 2": "Existing",
+      "Regular without operating hours": 4.0,
+      "Regular without Rates w/o operating hours": 4.0,
+      "Regular with operating hours ": 4.0,
+      "TOU Rate": 4.0,
+      "Demand charge": 4.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    }
+  ],
+  "SMB_Gas_AMINSM": [
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": "New/Existing",
+      "Regular ": null,
+      "Regular without insights": null,
+      "Unnamed: 5": null,
+      "TOU Rate": null,
+      "Demand charge": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": "Comments"
+    },
+    {
+      "Section": "Last month",
+      "Widget/Page": "Bill summary",
+      "Unnamed: 2": "Existing",
+      "Regular ": 1.0,
+      "Regular without insights": 1.0,
+      "Unnamed: 5": null,
+      "TOU Rate": 2.0,
+      "Demand charge": 2.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular ": null,
+      "Regular without insights": null,
+      "Unnamed: 5": null,
+      "TOU Rate": 1.0,
+      "Demand charge": 1.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular ": null,
+      "Regular without insights": null,
+      "Unnamed: 5": null,
+      "TOU Rate": 4.0,
+      "Demand charge": 4.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": "Carbon insight is a full size widget typically and comes in the end, but a half size one and comes under last month section when solar. I don't see/know how the grid system can handle this.\n\nIt also is a half size widget under last month section in case of resi NSM and gas fuel"
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular ": null,
+      "Regular without insights": null,
+      "Unnamed: 5": null,
+      "TOU Rate": null,
+      "Demand charge": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": "Current month",
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular ": null,
+      "Regular without insights": null,
+      "Unnamed: 5": null,
+      "TOU Rate": 2.0,
+      "Demand charge": 1.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular ": null,
+      "Regular without insights": null,
+      "Unnamed: 5": null,
+      "TOU Rate": null,
+      "Demand charge": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": "Those highlighted in pale yellow are in future scope"
+    },
+    {
+      "Section": null,
+      "Widget/Page": null,
+      "Unnamed: 2": null,
+      "Regular ": null,
+      "Regular without insights": null,
+      "Unnamed: 5": null,
+      "TOU Rate": null,
+      "Demand charge": null,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": "Insights & trends",
+      "Widget/Page": "Bill history",
+      "Unnamed: 2": "Existing",
+      "Regular ": 1.0,
+      "Regular without insights": 1.0,
+      "Unnamed: 5": null,
+      "TOU Rate": 1.0,
+      "Demand charge": 1.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Your insights",
+      "Unnamed: 2": "Existing",
+      "Regular ": 2.0,
+      "Regular without insights": null,
+      "Unnamed: 5": null,
+      "TOU Rate": 2.0,
+      "Demand charge": 2.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Program widget",
+      "Unnamed: 2": "Existing",
+      "Regular ": 3.0,
+      "Regular without insights": 2.0,
+      "Unnamed: 5": null,
+      "TOU Rate": 3.0,
+      "Demand charge": 3.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    },
+    {
+      "Section": null,
+      "Widget/Page": "Carbon widget",
+      "Unnamed: 2": "Existing",
+      "Regular ": 4.0,
+      "Regular without insights": 3.0,
+      "Unnamed: 5": null,
+      "TOU Rate": 4.0,
+      "Demand charge": 4.0,
+      "Unnamed: 8": null,
+      "Unnamed: 9": null
+    }
+  ]
+}
