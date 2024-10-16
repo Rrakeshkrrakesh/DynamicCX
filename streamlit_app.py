@@ -1,13 +1,11 @@
 import streamlit as st
 import pandas as pd
+import json
 
-# Load the Excel file
-file_path = 'Copy of CX Dynamic Layouts Config.xlsx' 
-xls = pd.ExcelFile(file_path)
-
-# Load all sheets
-sheet_names = xls.sheet_names
-data = {sheet: pd.read_excel(xls, sheet_name=sheet) for sheet in sheet_names}
+# Load the JSON file
+file_path = 'output.json'  # Replace with the actual path to your JSON file
+with open(file_path) as f:
+    data = json.load(f)
 
 # Define user attributes and their order of precedence
 user_attributes = ['EV', 'TOU', 'Solar', 'Budget Billing', 'Demand Charge', 'Regular']
@@ -27,7 +25,7 @@ st.title("CX Dynamic Layout Configuration")
 
 # Sidebar for user input
 st.sidebar.header("Configure User")
-selected_sheet = st.sidebar.selectbox("Select User Type, Fuel & Meter Type", sheet_names)
+selected_sheet = st.sidebar.selectbox("Select User Type, Fuel & Meter Type", list(data.keys()))
 selected_attributes = st.sidebar.multiselect("Select User Attributes", user_attributes)
 
 # --- Functions ---
@@ -80,7 +78,8 @@ def get_widget_order(df, attributes, applicable_widgets):
 
 # --- Main App Logic ---
 if selected_sheet in data:
-    df = data[selected_sheet]
+    # Load the sheet data as a DataFrame
+    df = pd.DataFrame(data[selected_sheet])
 
     # Get applicable widgets
     applicable_widgets = get_applicable_widgets(df, selected_attributes)
@@ -116,8 +115,5 @@ if selected_sheet in data:
     with st.expander("Show raw data"):
         st.dataframe(df)
 
-    # Explanation of the logic (optional)
-    # ... (You can add/modify this section as needed) 
-
 else:
-    st.error("Selected sheet not found in the Excel file.")
+    st.error("Selected sheet not found in the JSON file.")
