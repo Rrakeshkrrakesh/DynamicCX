@@ -39,27 +39,27 @@ def get_applicable_widgets(df, attributes, kill_widgets=None):
     """Gets applicable widgets, handling 'KILL', 'PASS', and utility-killed widgets."""
     applicable_widgets = []
     for _, row in df.iterrows():
-        widget = row['Widget Name']
+        widget = row.get('Widget Name') or row.get('Widget/Page')  # Handle alternative names
         if widget is None or (kill_widgets and widget in kill_widgets):
             continue
-        if 'Status (if applicable)' in df.columns and row['Status (if applicable)'] == 'OFF':
+        if 'Status (if applicable)' in row and row['Status (if applicable)'] == 'OFF':
             continue
 
         if not attributes:  # If no attributes selected, show all widgets (except killed)
             applicable_widgets.append(widget)
             continue
 
-        is_applicable = True
+        is_applicable = False
         for attr in attributes:
-            if attr in df.columns and pd.notna(row.get(attr)):
-                if row.get(attr) == "KILL":
+            if attr in row and pd.notna(row[attr]):
+                attr_value = row[attr]
+                if attr_value == "KILL":
                     is_applicable = False
                     break
-                elif row.get(attr) == 'PASS' or row.get(attr) in [0, "", None]:
+                elif attr_value in ['PASS', 0, "", None]:
                     continue
                 else:
                     is_applicable = True
-                    break  # If any attribute is applicable, include the widget
         if is_applicable:
             applicable_widgets.append(widget)
 
@@ -73,18 +73,24 @@ def get_widget_order(df, attributes, applicable_widgets):
     for attr in user_attributes:  # Iterate through user attributes in order of precedence
         if attr in attributes and attr in df.columns:
             # Sort only rows that have valid numeric values or comparable data for the attribute
-            attr_widgets = df[df['Widget Name'].isin(widgets_without_order)]
+            attr_widgets = df[df['Widget Name'].isin(widgets_without_order) | df['Widget/Page'].isin(widgets_without_order)].copy()
+            
+            # Handle alternative 'Widget/Page' column
+            attr_widgets['Widget_Name_Final'] = attr_widgets['Widget Name'].combine_first(attr_widgets['Widget/Page'])
+            
+            # Filter widgets with valid sort values
+            attr_widgets = attr_widgets[attr_widgets[attr].apply(lambda x: isinstance(x, (int, float)) or pd.notna(x))]
             try:
-                attr_widgets = attr_widgets[attr_widgets[attr].apply(lambda x: isinstance(x, (int, float)) or pd.notna(x))]
                 attr_widgets = attr_widgets.sort_values(attr, ascending=False)
             except TypeError:
                 continue  # Skip if the column contains incompatible types
 
             for _, row in attr_widgets.iterrows():
-                widget = row['Widget Name']
+                widget = row['Widget_Name_Final']
                 if pd.notna(row.get(attr)) and row.get(attr) not in ["KILL", "PASS", 0, "", None]:
-                    widget_order.append(widget)
-                    widgets_without_order.remove(widget)
+                    if widget in widgets_without_order:
+                        widget_order.append(widget)
+                        widgets_without_order.remove(widget)
 
     # Add any remaining widgets (that haven't been ordered by attributes)
     widget_order.extend(widgets_without_order)
@@ -120,9 +126,12 @@ if selected_sheet in data:
         # Convert selected sheet data to DataFrame
         df = pd.DataFrame(data[selected_sheet])
 
-        # Rename columns if necessary ('Widget/Page' to 'Widget Name')
-        if 'Widget/Page' in df.columns:
+        # Handle alternative 'Widget/Page' column
+        if 'Widget Name' not in df.columns and 'Widget/Page' in df.columns:
             df = df.rename(columns={'Widget/Page': 'Widget Name'})
+        elif 'Widget Name' not in df.columns and 'Widget/Page' not in df.columns:
+            st.error("Error: Neither 'Widget Name' nor 'Widget/Page' column found in the data.")
+            st.stop()
 
         # Get applicable widgets
         applicable_widgets = get_applicable_widgets(df, selected_attributes, kill_widgets)
@@ -134,19 +143,25 @@ if selected_sheet in data:
         st.subheader(f"Widget Order for {selected_sheet}")
         
         for section in section_order:
+            # Handle alternative 'Widget/Page' column
+            section_df = df[df['Section'] == section].copy()
+            section_df['Widget_Name_Final'] = section_df['Widget Name'].combine_first(section_df['Widget/Page'])
+
             section_widgets = [
-                w for w in widget_order if w in df[df['Section'] == section]['Widget Name'].values
+                w for w in widget_order if w in section_df['Widget_Name_Final'].values
             ]
 
             if section_widgets:
                 st.write(f"**{section} Section:**")
                 for widget in section_widgets:
-                    widget_row = df[df['Widget Name'] == widget]
-                    if 'Image' in widget_row.columns and pd.notna(widget_row['Image'].values[0]):
-                        image_path = widget_row['Image'].values[0]
-                        display_widget_with_image(widget, image_path)
-                    else:
-                        st.write(f"- {widget}")
+                    widget_row = section_df[section_df['Widget_Name_Final'] == widget]
+                    if not widget_row.empty:
+                        widget_row = widget_row.iloc[0]
+                        if 'Image' in widget_row and pd.notna(widget_row['Image']):
+                            image_path = widget_row['Image']
+                            display_widget_with_image(widget, image_path)
+                        else:
+                            st.write(f"- {widget}")
                 st.write("")  # For spacing
 
         # Display raw data (optional)
@@ -155,5 +170,13 @@ if selected_sheet in data:
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
+        # Optional: Display minimal debugging information without clutter
+        st.write("Debugging Information:")
+        st.write(f"Selected Sheet: {selected_sheet}")
+        st.write(f"Selected Attributes: {selected_attributes}")
+        st.write(f"Applicable Widgets: {applicable_widgets if 'applicable_widgets' in locals() else 'Not calculated yet'}")
+        if 'df' in locals():
+            st.write(df.info())
+            st.write(df.head())
 else:
     st.error("Selected sheet not found in the data.")
