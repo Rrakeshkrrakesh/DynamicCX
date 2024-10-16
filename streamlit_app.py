@@ -2,27 +2,33 @@ import streamlit as st
 import pandas as pd
 import json
 
-# Load the JSON file
-with open('CX_Dynamic_Layouts_Config.json') as f:
+# Load the JSON data (ensure the JSON file is in the correct directory)
+file_path = 'CX_Dynamic_Layouts_Config.json'  # Replace with your actual JSON file path
+
+# Read the JSON file
+with open(file_path, 'r') as f:
     data = json.load(f)
 
-# Convert to DataFrame for the selected sheet
-selected_sheet = "Sheet1"  # Example, replace with user selection
-df = pd.DataFrame(data[selected_sheet])
-
-# Clean up the DataFrame by dropping unwanted columns and rows with null values
-df = df.drop(columns=[col for col in df.columns if "Unnamed" in col or df[col].isnull().all()])
-
-# Rename columns if needed (e.g., 'Widget/Page' to 'Widget Name')
-df = df.rename(columns={'Widget/Page': 'Widget Name'})
-
-# Ensure critical columns are not null (add default values if necessary)
-df['Widget Name'] = df['Widget Name'].fillna('Unknown Widget')
-df['Section'] = df['Section'].fillna('Misc')
-
-# Now, proceed with the rest of your logic
 # Define user attributes and their order of precedence
-user_attributes = ['EV', 'TOU Rate', 'Solar', 'Budget Billing', 'Demand charge', 'Regular']
+user_attributes = ['EV', 'TOU', 'Solar', 'Budget Billing', 'Demand Charge', 'Regular']
+
+# Define section order
+section_order = [
+    "Last month",
+    "Current month",
+    "Insights & trends",
+    "Promotions",
+    "Carbon Footprint",
+]
+
+# Streamlit app configuration
+st.set_page_config(page_title="CX Dynamic Layout Configuration", layout="wide")
+st.title("CX Dynamic Layout Configuration")
+
+# Sidebar for user input
+st.sidebar.header("Configure User")
+selected_sheet = st.sidebar.selectbox("Select User Type, Fuel & Meter Type", list(data.keys()))  # Get available sheets dynamically
+selected_attributes = st.sidebar.multiselect("Select User Attributes", user_attributes)
 
 # --- Functions ---
 
@@ -73,43 +79,66 @@ def get_widget_order(df, attributes, applicable_widgets):
 
 
 # --- Main App Logic ---
-st.set_page_config(page_title="CX Dynamic Layout Configuration", layout="wide")
-st.title("CX Dynamic Layout Configuration")
 
-# Sidebar for user input
-selected_attributes = st.sidebar.multiselect("Select User Attributes", user_attributes)
+# Debugging and sanity check - Display available sheets
+st.write("Available sheets:", list(data.keys()))
 
-# Get applicable widgets
-applicable_widgets = get_applicable_widgets(df, selected_attributes)
-
-# Get widget order
-widget_order = get_widget_order(df, selected_attributes, applicable_widgets)
-
-# Display results with section ordering and layout
-st.subheader(f"Widget Order for {selected_sheet}")
-
-section_order = ["Last month", "Current month", "Insights & trends", "Promotions", "Carbon Footprint"]
-for section in section_order:
-    section_widgets = [
-        w for w in widget_order if w in df[df['Section'] == section]['Widget Name'].values
-    ]
-
-    if section_widgets:
-        st.write(f"**{section} Section:**")
-        num_widgets = len(section_widgets)
-
-        if num_widgets == 1:
-            st.write(f"- {section_widgets[0]} (Full Width)")
-        else:
-            cols = st.columns(2)
-            for i, widget in enumerate(section_widgets):
-                with cols[i % 2]:
-                    widget_display = widget
-                    if i == num_widgets - 1 and num_widgets % 2 != 0:
-                        widget_display += " (Full Width)"
-                    st.write(f"- {widget_display}")
-        st.write("")
-
-# Display raw data (optional)
-with st.expander("Show raw data"):
+# Ensure selected_sheet exists in data and has valid content
+if selected_sheet in data:
+    df = pd.DataFrame(data[selected_sheet])
+    
+    # Debugging - Show the data for the selected sheet
+    st.write(f"Data for selected sheet ({selected_sheet}):")
     st.dataframe(df)
+
+    # Get applicable widgets based on selected attributes
+    applicable_widgets = get_applicable_widgets(df, selected_attributes)
+
+    # Debugging - Show applicable widgets
+    st.write("Applicable Widgets:", applicable_widgets)
+
+    # Get widget order
+    widget_order = get_widget_order(df, selected_attributes, applicable_widgets)
+
+    # Debugging - Show widget order
+    st.write("Widget Order:", widget_order)
+
+    # Display results with section ordering and layout
+    st.subheader(f"Widget Order for {selected_sheet}")
+
+    for section in section_order:
+        section_widgets = [
+            w for w in widget_order if w in df[df['Section'] == section]['Widget Name'].values
+        ]
+
+        if section_widgets:
+            st.write(f"**{section} Section:**")
+            num_widgets = len(section_widgets)
+
+            if num_widgets == 1:
+                st.write(f"- {section_widgets[0]} (Full Width)")
+            else:
+                cols = st.columns(2)
+                for i, widget in enumerate(section_widgets):
+                    with cols[i % 2]:
+                        widget_display = widget
+                        if i == num_widgets - 1 and num_widgets % 2 != 0:
+                            widget_display += " (Full Width)"
+                        st.write(f"- {widget_display}")
+            st.write("")  # For spacing
+
+    # Display raw data (optional)
+    with st.expander("Show raw data"):
+        st.dataframe(df)
+
+else:
+    st.error("Selected sheet not found in the data.")
+
+# Debugging - Explanation of the logic (optional)
+st.write("""
+### Debugging Log
+- Available Sheets: Lists all sheets from the JSON file.
+- Data for Selected Sheet: Displays the data for the selected sheet.
+- Applicable Widgets: Displays the widgets applicable based on the user's selected attributes.
+- Widget Order: Displays the final order of widgets based on the attributes.
+""")
