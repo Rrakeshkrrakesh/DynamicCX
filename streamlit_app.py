@@ -155,12 +155,5 @@ if selected_sheet in data:
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
-        st.write("Debugging Information:")
-        st.write(f"Selected Sheet: {selected_sheet}")
-        st.write(f"Selected Attributes: {selected_attributes}")
-        st.write(f"Applicable Widgets: {applicable_widgets if 'applicable_widgets' in locals() else 'Not calculated yet'}")
-        if 'df' in locals():
-            st.write(df.info())
-            st.write(df.head())
 else:
     st.error("Selected sheet not found in the data.")
