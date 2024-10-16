@@ -1,4 +1,8 @@
 import streamlit as st
+
+# Streamlit app configuration (must be the first Streamlit command)
+st.set_page_config(page_title="CX Dynamic Layout Configuration", layout="wide")
+
 import pandas as pd
 import json
 
@@ -27,8 +31,6 @@ section_order = [
     "Carbon Footprint",
 ]
 
-# Streamlit app configuration
-st.set_page_config(page_title="CX Dynamic Layout Configuration", layout="wide")
 st.title("CX Dynamic Layout Configuration")
 
 # Sidebar for user input
