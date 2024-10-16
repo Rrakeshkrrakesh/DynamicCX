@@ -35,11 +35,11 @@ section_order = [
 
 # --- Functions ---
 
-def get_applicable_widgets(df, attributes, kill_widgets=None):
+def get_applicable_widgets(df, attributes, widget_column, kill_widgets=None):
     """Gets applicable widgets, handling 'KILL', 'PASS', and utility-killed widgets."""
     applicable_widgets = []
     for _, row in df.iterrows():
-        widget = row.get('Widget Name')  # Use `.get()` to handle missing keys
+        widget = row[widget_column]  # Use dynamically detected widget column
         if widget is None or (kill_widgets and widget in kill_widgets):
             continue
         if 'Status (if applicable)' in df.columns and row['Status (if applicable)'] == 'OFF':
@@ -65,16 +65,16 @@ def get_applicable_widgets(df, attributes, kill_widgets=None):
 
     return applicable_widgets
 
-def get_widget_order(df, attributes, applicable_widgets):
+def get_widget_order(df, attributes, applicable_widgets, widget_column):
     """Determine widget order using attribute precedence and relative order."""
     widget_order = []
     widgets_without_order = applicable_widgets.copy()
 
     for attr in user_attributes:  # Iterate through user attributes in order of precedence
         if attr in attributes and attr in df.columns:
-            attr_widgets = df[df['Widget Name'].isin(widgets_without_order)].sort_values(attr, ascending=False)
+            attr_widgets = df[df[widget_column].isin(widgets_without_order)].sort_values(attr, ascending=False)
             for _, row in attr_widgets.iterrows():
-                widget = row.get('Widget Name')
+                widget = row[widget_column]
                 if pd.notna(row.get(attr)) and row.get(attr) not in ["KILL", "PASS", 0, ""]:
                     widget_order.append(widget)
                     widgets_without_order.remove(widget)
@@ -107,24 +107,32 @@ selected_sheet = st.sidebar.selectbox("Select User Type, Fuel & Meter Type", lis
 if selected_sheet in data:
     df_initial = pd.DataFrame(data[selected_sheet])
 
-    # Ensure 'Widget Name' exists
-    if 'Widget Name' not in df_initial.columns:
-        st.error("Error: 'Widget Name' column is missing from the data.")
+    # Display available column names for debugging
+    st.write("Available columns:", df_initial.columns)
+
+    # Detect widget name column dynamically
+    widget_column = None
+    if 'Widget Name' in df_initial.columns:
+        widget_column = 'Widget Name'
+    elif 'Widget/Page' in df_initial.columns:
+        widget_column = 'Widget/Page'
+    else:
+        st.error("Error: Neither 'Widget Name' nor 'Widget/Page' column found in the data.")
         st.stop()
 
     available_attributes = [attr for attr in user_attributes if attr in df_initial.columns]
     selected_attributes = st.sidebar.multiselect("Select User Attributes", available_attributes)
-    kill_widgets = st.sidebar.multiselect("Widgets to Kill (Utility Level)", df_initial['Widget Name'].unique())
+    kill_widgets = st.sidebar.multiselect("Widgets to Kill (Utility Level)", df_initial[widget_column].unique())
 
     try:
         # Convert selected sheet data to DataFrame
         df = pd.DataFrame(data[selected_sheet])
 
         # Get applicable widgets
-        applicable_widgets = get_applicable_widgets(df, selected_attributes, kill_widgets)
+        applicable_widgets = get_applicable_widgets(df, selected_attributes, widget_column, kill_widgets)
 
         # Get widget order
-        widget_order = get_widget_order(df, selected_attributes, applicable_widgets)
+        widget_order = get_widget_order(df, selected_attributes, applicable_widgets, widget_column)
 
         # Display widget order and group by section
         st.subheader(f"Widget Order for {selected_sheet}")
@@ -132,13 +140,13 @@ if selected_sheet in data:
         for section in section_order:
             if 'Section' in df.columns:
                 section_widgets = [
-                    w for w in widget_order if w in df[df['Section'] == section]['Widget Name'].values
+                    w for w in widget_order if w in df[df['Section'] == section][widget_column].values
                 ]
 
                 if section_widgets:
                     st.write(f"**{section} Section:**")
                     for widget in section_widgets:
-                        widget_row = df[df['Widget Name'] == widget]
+                        widget_row = df[df[widget_column] == widget]
                         if 'Image' in widget_row.columns and pd.notna(widget_row['Image'].values[0]):
                             image_path = widget_row['Image'].values[0]
                             display_widget_with_image(widget, image_path)
